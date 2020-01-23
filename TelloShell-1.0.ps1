@@ -1,7 +1,4 @@
-﻿#Voice Commanded SDK
-#---------------------
-
-Add-Type -AssemblyName System.speech
+﻿Add-Type -AssemblyName System.speech
 
 $client = new-object net.sockets.udpclient(0)
 $peerIP = "192.168.10.1"
