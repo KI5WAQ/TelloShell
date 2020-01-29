@@ -27,7 +27,9 @@ $keywords = @(
     "time",
     "wifi",
     "sdk",
-    "serial number"
+    "serial number",
+    "video stream on",
+    "video stream off"
 )
     
 ## Load keywords into grammerBuilder
@@ -130,5 +132,11 @@ while (!$cmdBoolean) {
     $content = $client.Receive([ref]$endpoint)
     $response = [Text.Encoding]::ASCII.GetString($content)
     $speaker.Speak("Tello SDK serial number is $response")
+  }
+  if ($myWords -match "video stream on" -and [double]$conf -gt 0.80) {
+    $speaker.Speak("Starting Video Stream")
+    $send = [text.encoding]::ascii.getbytes("streamon")
+    [void] $client.send($send, $send.length, $peerIP, $peerPort)
+    Start-Process 'C:\Program Files\VideoLAN\VLC\vlc.exe' -ArgumentList "udp://192.168.10.1:11111"
   }
 }
