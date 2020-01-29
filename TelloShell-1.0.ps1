@@ -1,6 +1,9 @@
 ﻿Add-Type -AssemblyName System.speech
 
 $client = new-object net.sockets.udpclient(0)
+$client.Client.ReceiveTimeout = 5000
+$endpoint = New-Object System.Net.IPEndPoint ([IPAddress]::Any, 8890)
+
 $peerIP = "192.168.10.1"
 $peerPort = "8889"
 
@@ -12,8 +15,21 @@ $speaker.SelectVoice("Microsoft Zira Desktop");
 $speechRecogEng = [System.Speech.Recognition.SpeechRecognitionEngine]::new();
 
 ## Setup Keywords for voice commands
-$keywords = @("hello","exit","connect","launch","land","flip")
-
+$keywords = @(
+    "hello",
+    "exit",
+    "connect",
+    "launch",
+    "land",
+    "flip",
+    "battery",
+    "speed",
+    "time",
+    "wifi",
+    "sdk",
+    "serial number"
+)
+    
 ## Load keywords into grammerBuilder
 write-host "Loading commands..." -foreground "white"
 $ii=0;
@@ -48,6 +64,9 @@ while (!$cmdBoolean) {
     $speaker.Speak("Connecting to Tello")
     $send = [text.encoding]::ascii.getbytes("command")
     [void] $client.send($send, $send.length, $peerIP, $peerPort)
+
+    $content = $client.Receive([ref]$endpoint)
+    [Text.Encoding]::ASCII.GetString($content)
   }
   if ($myWords -match "launch" -and [double]$conf -gt 0.80) {
     $speaker.Speak("Launching")
@@ -63,5 +82,53 @@ while (!$cmdBoolean) {
     $speaker.Speak("Flipping")
     $send = [text.encoding]::ascii.getbytes("flip l")
     [void] $client.send($send, $send.length, $peerIP, $peerPort)
+  }
+  if ($myWords -match "battery" -and [double]$conf -gt 0.80) {
+    $send = [text.encoding]::ascii.getbytes("battery?")
+    [void] $client.send($send, $send.length, $peerIP, $peerPort)
+
+    $content = $client.Receive([ref]$endpoint)
+    $response = [Text.Encoding]::ASCII.GetString($content)
+    $speaker.Speak("Battery level is $response-percent full.")
+  }
+  if ($myWords -match "speed" -and [double]$conf -gt 0.80) {
+    $send = [text.encoding]::ascii.getbytes("speed?")
+    [void] $client.send($send, $send.length, $peerIP, $peerPort)
+
+    $content = $client.Receive([ref]$endpoint)
+    $response = [Text.Encoding]::ASCII.GetString($content)
+    $speaker.Speak("Current speed is $response centimeters per second")
+  }
+  if ($myWords -match "time" -and [double]$conf -gt 0.80) {
+    $send = [text.encoding]::ascii.getbytes("time?")
+    [void] $client.send($send, $send.length, $peerIP, $peerPort)
+
+    $content = $client.Receive([ref]$endpoint)
+    $response = [Text.Encoding]::ASCII.GetString($content)
+    $speaker.Speak("Current flight time is $response seconds")
+  }
+  if ($myWords -match "wifi" -and [double]$conf -gt 0.80) {
+    $send = [text.encoding]::ascii.getbytes("wifi?")
+    [void] $client.send($send, $send.length, $peerIP, $peerPort)
+
+    $content = $client.Receive([ref]$endpoint)
+    $response = [Text.Encoding]::ASCII.GetString($content)
+    $speaker.Speak("Wi-Fi SNR is $response")
+  }
+  if ($myWords -match "sdk" -and [double]$conf -gt 0.80) {
+    $send = [text.encoding]::ascii.getbytes("sdk?")
+    [void] $client.send($send, $send.length, $peerIP, $peerPort)
+
+    $content = $client.Receive([ref]$endpoint)
+    $response = [Text.Encoding]::ASCII.GetString($content)
+    $speaker.Speak("Tello SDK version is $response")
+  }
+  if ($myWords -match "serial number" -and [double]$conf -gt 0.80) {
+    $send = [text.encoding]::ascii.getbytes("sn?")
+    [void] $client.send($send, $send.length, $peerIP, $peerPort)
+
+    $content = $client.Receive([ref]$endpoint)
+    $response = [Text.Encoding]::ASCII.GetString($content)
+    $speaker.Speak("Tello SDK serial number is $response")
   }
 }
